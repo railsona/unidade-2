@@ -1,30 +1,484 @@
-double tempoBubble = 0.0;
+#include "raylib.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
-if (IsKeyPressed(KEY_B)) {
-    double inicio = GetTime();
+#define LARGURA 1000
+#define ALTURA 700
+#define PONTUACAO_MAX 100
+#define QUANTIDADE_PLACARES 30
 
-    ordenarBubbleSort(
-        placares,
-        quantidade,
-        &comparacoes,
-        &trocas
-    );
+typedef struct {
+    char nome[16];
+    int pontuacao;
+} Placar;
 
-    double fim = GetTime();
 
-    tempoBubble = (fim - inicio) * 1000.0;
+/* CRIAR PLACARES */
 
-    ordenado = true;
+Placar *criarPlacares(int quantidade) {
+    Placar *placares = (Placar *)malloc(quantidade * sizeof(Placar));
+
+    if (placares == NULL)
+        return NULL;
+
+    for (int i = 0; i < quantidade; i++) {
+        Placar *p = placares + i;
+
+        TextCopy(p->nome, TextFormat("J%02d", i + 1));
+        p->pontuacao = GetRandomValue(10, PONTUACAO_MAX);
+    }
+
+    return placares;
 }
 
-DrawText(
-    TextFormat(
-        "Bubble Sort: %ld comparacoes | Tempo: %.4f ms",
-        comparacoes,
-        tempoBubble
-    ),
-    20,
-    100,
-    20,
-    BLACK
-);
+
+/* BUBBLE SORT */
+
+void ordenarBubbleSort(
+    Placar *vetor,
+    int n,
+    long *comparacoes,
+    long *trocas
+) {
+    *comparacoes = 0;
+    *trocas = 0;
+
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - 1 - i; j++) {
+
+            (*comparacoes)++;
+
+            if (vetor[j].pontuacao > vetor[j + 1].pontuacao) {
+
+                Placar temp = vetor[j];
+                vetor[j] = vetor[j + 1];
+                vetor[j + 1] = temp;
+
+                (*trocas)++;
+            }
+        }
+    }
+}
+
+
+/* INSERTION SORT */
+
+void ordenarInsertionSort(
+    Placar *vetor,
+    int n,
+    long *comparacoes,
+    long *trocas
+) {
+    *comparacoes = 0;
+    *trocas = 0;
+
+    for (int i = 1; i < n; i++) {
+
+        Placar chave = vetor[i];
+        int j = i - 1;
+
+        while (j >= 0) {
+
+            (*comparacoes)++;
+
+            if (vetor[j].pontuacao > chave.pontuacao) {
+
+                vetor[j + 1] = vetor[j];
+
+                (*trocas)++;
+
+                j--;
+            }
+            else {
+                break;
+            }
+        }
+
+        vetor[j + 1] = chave;
+    }
+}
+
+
+/* BUSCA SEQUENCIAL */
+
+int buscaSequencial(
+    Placar *vetor,
+    int n,
+    int alvo,
+    long *comparacoes
+) {
+    *comparacoes = 0;
+
+    for (int i = 0; i < n; i++) {
+
+        (*comparacoes)++;
+
+        if (vetor[i].pontuacao == alvo)
+            return i;
+    }
+
+    return -1;
+}
+
+
+/* BUSCA BINÁRIA */
+
+int buscaBinaria(
+    Placar *vetor,
+    int n,
+    int alvo,
+    long *comparacoes
+) {
+    *comparacoes = 0;
+
+    int inicio = 0;
+    int fim = n - 1;
+
+    while (inicio <= fim) {
+
+        (*comparacoes)++;
+
+        int meio = (inicio + fim) / 2;
+
+        if (vetor[meio].pontuacao == alvo)
+            return meio;
+
+        if (vetor[meio].pontuacao < alvo)
+            inicio = meio + 1;
+        else
+            fim = meio - 1;
+    }
+
+    return -1;
+}
+
+
+/*  DESENHAR PLACARES */
+
+void desenharPlacares(Placar *placares, int quantidade) {
+
+    int larguraBarra = LARGURA / quantidade;
+
+    for (int i = 0; i < quantidade; i++) {
+
+        int altura =
+            (placares[i].pontuacao * 400) / PONTUACAO_MAX;
+
+        int x = i * larguraBarra;
+        int y = 600 - altura;
+
+        DrawRectangle(
+            x + 2,
+            y,
+            larguraBarra - 4,
+            altura,
+            BLUE
+        );
+
+        DrawText(
+            placares[i].nome,
+            x + 3,
+            610,
+            12,
+            BLACK
+        );
+
+        DrawText(
+            TextFormat("%d", placares[i].pontuacao),
+            x + 3,
+            y - 20,
+            12,
+            BLACK
+        );
+    }
+}
+
+
+/* MAIN */
+
+int main(void) {
+
+    InitWindow(
+        LARGURA,
+        ALTURA,
+        "Atividade 7 - Algoritmos"
+    );
+
+    SetTargetFPS(60);
+
+    Placar *placares =
+        criarPlacares(QUANTIDADE_PLACARES);
+
+    if (placares == NULL) {
+        CloseWindow();
+        return 1;
+    }
+
+    int quantidade = QUANTIDADE_PLACARES;
+
+    long comparacoesBubble = 0;
+    long trocasBubble = 0;
+
+    long comparacoesInsertion = 0;
+    long trocasInsertion = 0;
+
+    long comparacoesSequencial = 0;
+    long comparacoesBinaria = 0;
+
+    double tempoBubble = 0.0;
+
+    int resultadoSequencial = -1;
+    int resultadoBinaria = -1;
+
+    int alvo = 50;
+
+    bool ordenado = false;
+
+    while (!WindowShouldClose()) {
+
+        /* BUBBLE SORT - TECLA B */
+
+        if (IsKeyPressed(KEY_B)) {
+
+            double inicio = GetTime();
+
+            ordenarBubbleSort(
+                placares,
+                quantidade,
+                &comparacoesBubble,
+                &trocasBubble
+            );
+
+            double fim = GetTime();
+
+            tempoBubble =
+                (fim - inicio) * 1000.0;
+
+            ordenado = true;
+        }
+
+
+        /* INSERTION SORT - TECLA I */
+
+        if (IsKeyPressed(KEY_I)) {
+
+            ordenarInsertionSort(
+                placares,
+                quantidade,
+                &comparacoesInsertion,
+                &trocasInsertion
+            );
+
+            ordenado = true;
+        }
+
+
+        /* BUSCA SEQUENCIAL - TECLA S */
+
+        if (IsKeyPressed(KEY_S)) {
+
+            resultadoSequencial =
+                buscaSequencial(
+                    placares,
+                    quantidade,
+                    alvo,
+                    &comparacoesSequencial
+                );
+        }
+
+
+        /* BUSCA BINÁRIA - TECLA W */
+
+        if (IsKeyPressed(KEY_W)) {
+
+            if (ordenado) {
+
+                resultadoBinaria =
+                    buscaBinaria(
+                        placares,
+                        quantidade,
+                        alvo,
+                        &comparacoesBinaria
+                    );
+            }
+        }
+
+
+        /* RECRIAR VETOR - TECLA R */
+
+        if (IsKeyPressed(KEY_R)) {
+
+            free(placares);
+
+            placares =
+                criarPlacares(quantidade);
+
+            ordenado = false;
+
+            comparacoesBubble = 0;
+            trocasBubble = 0;
+
+            comparacoesInsertion = 0;
+            trocasInsertion = 0;
+
+            comparacoesSequencial = 0;
+            comparacoesBinaria = 0;
+
+            resultadoSequencial = -1;
+            resultadoBinaria = -1;
+
+            tempoBubble = 0.0;
+        }
+
+
+        /*  DESENHO */
+
+        BeginDrawing();
+
+        ClearBackground(RAYWHITE);
+
+        DrawText(
+            "ATIVIDADE 7 - ALGORITMOS",
+            20,
+            20,
+            25,
+            BLACK
+        );
+
+        DrawText(
+            "B = Bubble Sort",
+            20,
+            55,
+            18,
+            BLACK
+        );
+
+        DrawText(
+            "I = Insertion Sort",
+            200,
+            55,
+            18,
+            BLACK
+        );
+
+        DrawText(
+            "S = Busca Sequencial",
+            400,
+            55,
+            18,
+            BLACK
+        );
+
+        DrawText(
+            "W = Busca Binaria",
+            620,
+            55,
+            18,
+            BLACK
+        );
+
+        DrawText(
+            "R = Novo vetor",
+            800,
+            55,
+            18,
+            BLACK
+        );
+
+
+        /* Informações do Bubble Sort */
+
+        DrawText(
+            TextFormat(
+                "Bubble Sort: %ld comparacoes | %ld trocas | %.4f ms",
+                comparacoesBubble,
+                trocasBubble,
+                tempoBubble
+            ),
+            20,
+            90,
+            18,
+            BLACK
+        );
+
+
+        /* Informações do Insertion Sort */
+
+        DrawText(
+            TextFormat(
+                "Insertion Sort: %ld comparacoes | %ld trocas",
+                comparacoesInsertion,
+                trocasInsertion
+            ),
+            20,
+            120,
+            18,
+            BLACK
+        );
+
+
+        /* Busca Sequencial */
+
+        DrawText(
+            TextFormat(
+                "Busca Sequencial: alvo %d | comparacoes: %ld | posicao: %d",
+                alvo,
+                comparacoesSequencial,
+                resultadoSequencial
+            ),
+            20,
+            150,
+            18,
+            BLACK
+        );
+
+
+        /* Busca Binária */
+
+        DrawText(
+            TextFormat(
+                "Busca Binaria: alvo %d | comparacoes: %ld | posicao: %d",
+                alvo,
+                comparacoesBinaria,
+                resultadoBinaria
+            ),
+            20,
+            180,
+            18,
+            BLACK
+        );
+
+
+        if (!ordenado) {
+
+            DrawText(
+                "Busca binaria disponivel somente depois de ordenar!",
+                20,
+                210,
+                18,
+                RED
+            );
+        }
+
+
+        /* Desenha as barras */
+
+        desenharPlacares(
+            placares,
+            quantidade
+        );
+
+
+        EndDrawing();
+    }
+
+
+    /* Libera memória */
+
+    free(placares);
+
+    CloseWindow();
+
+    return 0;
+}
