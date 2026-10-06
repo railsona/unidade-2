@@ -2,9 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-/* =========================
-   TIPOS E ESTRUTURAS
-   ========================= */
+/*  TIPOS E ESTRUTURAS */
 
 typedef enum {
     ENTIDADE_JOGADOR,
@@ -27,9 +25,7 @@ typedef struct {
 } Entidade;
 
 
-/* =========================
-   FUNÇÕES DO MÓDULO
-   ========================= */
+/* FUNÇÕES DO MÓDULO */
 
 Entidade *entidadeCriar(TipoEntidade tipo, Vector2 pos) {
     Entidade *e = (Entidade *)malloc(sizeof(Entidade));
@@ -96,9 +92,7 @@ bool entidadeEstaViva(Entidade *e) {
 }
 
 
-/* =========================
-   PROGRAMA PRINCIPAL
-   ========================= */
+/* PROGRAMA PRINCIPAL */
 
 int main(void) {
 
