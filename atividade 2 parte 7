@@ -1,0 +1,30 @@
+double tempoBubble = 0.0;
+
+if (IsKeyPressed(KEY_B)) {
+    double inicio = GetTime();
+
+    ordenarBubbleSort(
+        placares,
+        quantidade,
+        &comparacoes,
+        &trocas
+    );
+
+    double fim = GetTime();
+
+    tempoBubble = (fim - inicio) * 1000.0;
+
+    ordenado = true;
+}
+
+DrawText(
+    TextFormat(
+        "Bubble Sort: %ld comparacoes | Tempo: %.4f ms",
+        comparacoes,
+        tempoBubble
+    ),
+    20,
+    100,
+    20,
+    BLACK
+);
