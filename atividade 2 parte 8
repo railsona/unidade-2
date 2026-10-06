@@ -1,0 +1,168 @@
+#include "raylib.h"
+#include <stdbool.h>
+#include <stdlib.h>
+
+/* =========================
+   TIPOS E ESTRUTURAS
+   ========================= */
+
+typedef enum {
+    ENTIDADE_JOGADOR,
+    ENTIDADE_INIMIGO,
+    ENTIDADE_ITEM
+} TipoEntidade;
+
+typedef union {
+    int dano;
+    int valor;
+} ExtraEntidade;
+
+typedef struct {
+    TipoEntidade tipo;
+    Vector2 pos;
+    float raio;
+    int vida;
+    Color cor;
+    ExtraEntidade extra;
+} Entidade;
+
+
+/* =========================
+   FUNÇÕES DO MÓDULO
+   ========================= */
+
+Entidade *entidadeCriar(TipoEntidade tipo, Vector2 pos) {
+    Entidade *e = (Entidade *)malloc(sizeof(Entidade));
+
+    if (e == NULL)
+        return NULL;
+
+    e->tipo = tipo;
+    e->pos = pos;
+    e->raio = 20;
+    e->vida = 100;
+
+    if (tipo == ENTIDADE_JOGADOR) {
+        e->cor = BLUE;
+        e->extra.dano = 10;
+    }
+    else if (tipo == ENTIDADE_INIMIGO) {
+        e->cor = RED;
+        e->extra.dano = 10;
+    }
+    else {
+        e->cor = GREEN;
+        e->extra.valor = 10;
+    }
+
+    return e;
+}
+
+bool entidadeColidiu(Entidade *a, Entidade *b) {
+    if (a == NULL || b == NULL)
+        return false;
+
+    return CheckCollisionCircles(
+        a->pos,
+        a->raio,
+        b->pos,
+        b->raio
+    );
+}
+
+void entidadeDesenhar(Entidade *e) {
+    if (e == NULL)
+        return;
+
+    DrawCircleV(e->pos, e->raio, e->cor);
+}
+
+void entidadeAplicarDano(Entidade *e, int dano) {
+    if (e == NULL)
+        return;
+
+    e->vida -= dano;
+
+    if (e->vida < 0)
+        e->vida = 0;
+}
+
+/* Exercício 1 */
+bool entidadeEstaViva(Entidade *e) {
+    if (e == NULL)
+        return false;
+
+    return e->vida > 0;
+}
+
+
+/* =========================
+   PROGRAMA PRINCIPAL
+   ========================= */
+
+int main(void) {
+
+    InitWindow(800, 600, "Atividade 8");
+    SetTargetFPS(60);
+
+    /* Criação das entidades */
+    Entidade *jogador =
+        entidadeCriar(
+            ENTIDADE_JOGADOR,
+            (Vector2){150, 300}
+        );
+
+    Entidade *inimigo =
+        entidadeCriar(
+            ENTIDADE_INIMIGO,
+            (Vector2){400, 300}
+        );
+
+    Entidade *item =
+        entidadeCriar(
+            ENTIDADE_ITEM,
+            (Vector2){650, 300}
+        );
+
+    while (!WindowShouldClose()) {
+
+        /* Exemplo de uso da função entidadeEstaViva */
+        if (!entidadeEstaViva(jogador)) {
+            /* Jogador está morto */
+        }
+
+        BeginDrawing();
+
+        ClearBackground(RAYWHITE);
+
+        /* Desenha as entidades */
+        entidadeDesenhar(jogador);
+        entidadeDesenhar(inimigo);
+        entidadeDesenhar(item);
+
+        /* Textos */
+        DrawText("JOGADOR", 105, 340, 20, BLACK);
+        DrawText("INIMIGO", 360, 340, 20, BLACK);
+        DrawText("ITEM", 625, 340, 20, BLACK);
+
+        /* Mostra a vida do jogador */
+        DrawText(
+            TextFormat("Vida: %d", jogador->vida),
+            100,
+            370,
+            20,
+            BLACK
+        );
+
+        EndDrawing();
+    }
+
+    /* Libera a memória */
+    free(jogador);
+    free(inimigo);
+    free(item);
+
+    CloseWindow();
+
+    return 0;
+}
